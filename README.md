@@ -1,5 +1,5 @@
 # 🎉 search-utility
-Recursive employee explorer (multiway tree) using React along with duplicates removal.
+Search utility with autosuggest feature
 
 ## Development
 
