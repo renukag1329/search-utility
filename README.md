@@ -10,6 +10,8 @@ Open your favorite Terminal and run these commands:
 ```bash
 cd search-utility
 
+copy .env.example file content to .env file
+
 npm install
 
 npm start
