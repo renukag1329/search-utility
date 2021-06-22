@@ -27,6 +27,12 @@ const SearchSuggestions = (props) => {
       });
   };
 
+  const onFocus = (e) => {
+    if (suggestions.length) {
+      suggestions.forEach(suggestion => renderSuggestion(suggestion, { value }));
+    }
+  }
+
   // returns the selected suggestion
   const getSuggestionValue = (suggestion) => {
     setShouldSearch(false);
@@ -67,7 +73,8 @@ const SearchSuggestions = (props) => {
 
   // clear suggestions
   const onSuggestionsClearRequested = () => {
-    setsuggestions([]);
+    // don't clear since we need to show suggestions onFocus
+    // setsuggestions([]);
   };
 
   // debounce while typing
@@ -93,6 +100,7 @@ const SearchSuggestions = (props) => {
     placeholder: "Enter search text...",
     value,
     onChange,
+    onFocus
   };
 
   return (
