@@ -29,9 +29,11 @@ const SearchSuggestions = (props) => {
 
   const onFocus = (e) => {
     if (suggestions.length) {
-      suggestions.forEach(suggestion => renderSuggestion(suggestion, { value }));
+      suggestions.forEach((suggestion) =>
+        renderSuggestion(suggestion, { value })
+      );
     }
-  }
+  };
 
   // returns the selected suggestion
   const getSuggestionValue = (suggestion) => {
@@ -63,7 +65,10 @@ const SearchSuggestions = (props) => {
 
   // onchange handler of input
   const onChange = (event, { newValue, method }) => {
-    setShouldSearch(true);
+    const eventTypeClick = "click";
+    if (event.type !== eventTypeClick) {
+      setShouldSearch(true);
+    }
     setValue(newValue);
   };
 
@@ -100,7 +105,7 @@ const SearchSuggestions = (props) => {
     placeholder: "Enter search text...",
     value,
     onChange,
-    onFocus
+    onFocus,
   };
 
   return (
