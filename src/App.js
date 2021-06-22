@@ -7,7 +7,7 @@ function App() {
   return (
     <div className="App container">
       <header></header>
-        <SearchSuggestions />
+      <SearchSuggestions />
     </div>
   );
 }

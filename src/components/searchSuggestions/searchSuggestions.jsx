@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect } from "react";
-import Autosuggest from 'react-autosuggest';
+import Autosuggest from "react-autosuggest";
 import AutosuggestHighlightMatch from "autosuggest-highlight/umd/match";
 import AutosuggestHighlightParse from "autosuggest-highlight/umd/parse";
 
@@ -76,12 +76,12 @@ const SearchSuggestions = (props) => {
   useEffect(
     () => {
       if (debouncedSearchText && shouldSearch) {
-        getSuggestions({ url: apiPaths.getSuggestions({ searchText: value }) }).then(
-          (response) => {
-            const arrayObj = response.map(item => ({name: item}));
-            setsuggestions(arrayObj);
-          }
-        );
+        getSuggestions({
+          url: apiPaths.getSuggestions({ searchText: value }),
+        }).then((response) => {
+          const arrayObj = response.map((item) => ({ name: item }));
+          setsuggestions(arrayObj);
+        });
       } else {
         setsuggestions([]);
       }
@@ -97,7 +97,7 @@ const SearchSuggestions = (props) => {
 
   return (
     <>
-    <section>
+      <section>
         <h3 className="display-3 text-secondary">Search Utility</h3>
       </section>
       <Autosuggest
@@ -108,7 +108,7 @@ const SearchSuggestions = (props) => {
         renderSuggestion={renderSuggestion}
         inputProps={inputProps}
       />
-      </>
+    </>
   );
 };
 

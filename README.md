@@ -1,4 +1,5 @@
 # 🎉 search-utility
+
 Search utility with autosuggest feature
 
 ## Development
