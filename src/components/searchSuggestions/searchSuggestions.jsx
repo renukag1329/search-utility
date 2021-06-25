@@ -1,18 +1,17 @@
-import React, { memo, useState, useEffect } from "react";
-import Autosuggest from "react-autosuggest";
-import AutosuggestHighlightMatch from "autosuggest-highlight/umd/match";
-import AutosuggestHighlightParse from "autosuggest-highlight/umd/parse";
+import React, { memo, useState, useRef, useEffect } from "react";
 
 import { useDebounce } from "../../shared/hooks/useDebounce";
 import apiPaths from "../../shared/settings/apiPaths";
 
+import Suggestions from "../suggestions/suggestions";
+
 const SearchSuggestions = (props) => {
   // state for search text
-  const [value, setValue] = useState("");
+  const [searchText, setSearchText] = useState("");
   // state for searched results
-  const [suggestions, setsuggestions] = useState([]);
-  // state for whether search again or not
-  const [shouldSearch, setShouldSearch] = useState(true);
+  const [searchResult, setSearchResult] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [currentFocus, setCurrentFocus] = useState(-1);
 
   //API to get suggestions
   const getSuggestions = ({ url }) => {
@@ -27,101 +26,101 @@ const SearchSuggestions = (props) => {
       });
   };
 
-  const onFocus = (e) => {
-    if (suggestions.length) {
-      suggestions.forEach((suggestion) =>
-        renderSuggestion(suggestion, { value })
-      );
+  const debouncedSearchText = useDebounce(searchText, 500);
+
+  const suggestionsRef = useRef(null);
+
+  const handleClickOutside = (event) => {
+    if (
+      event.target.localName !== "input" &&
+      suggestionsRef.current &&
+      !suggestionsRef.current.contains(event.target)
+    ) {
+      setShowSuggestions(false);
     }
   };
-
-  // returns the selected suggestion
-  const getSuggestionValue = (suggestion) => {
-    setShouldSearch(false);
-    return `${suggestion.name} `;
-  };
-
-  // func to return list of suggestions with highlighted text
-  const renderSuggestion = (suggestion, { query }) => {
-    const matches = AutosuggestHighlightMatch(suggestion.name, query);
-    const parts = AutosuggestHighlightParse(suggestion.name, matches);
-
-    return (
-      <span>
-        {parts.map((part, index) => {
-          const className = part.highlight
-            ? "react-autosuggest__suggestion-match"
-            : null;
-
-          return (
-            <span className={className} key={index}>
-              {part.text}
-            </span>
-          );
-        })}
-      </span>
-    );
-  };
-
-  // onchange handler of input
-  const onChange = (event, { newValue, method }) => {
-    const eventTypeClick = "click";
-    if (event.type !== eventTypeClick) {
-      setShouldSearch(true);
-    }
-    setValue(newValue);
-  };
-
-  const onSuggestionsFetchRequested = ({ value }) => {
-    // do nothing
-  };
-
-  // clear suggestions
-  const onSuggestionsClearRequested = () => {
-    // don't clear since we need to show suggestions onFocus
-    // setsuggestions([]);
-  };
-
-  // debounce while typing
-  const debouncedSearchText = useDebounce(value, 500);
 
   useEffect(
     () => {
-      if (debouncedSearchText && shouldSearch) {
-        getSuggestions({
-          url: apiPaths.getSuggestions({ searchText: value }),
-        }).then((response) => {
-          const arrayObj = response.map((item) => ({ name: item }));
-          setsuggestions(arrayObj);
-        });
+      if (debouncedSearchText && showSuggestions) {
+        getSuggestions({ url: apiPaths.getSuggestions({ searchText }) }).then(
+          (response) => {
+            setSearchResult(response);
+            setShowSuggestions(true);
+          }
+        );
       } else {
-        setsuggestions([]);
+        setSearchResult([]);
       }
+      document.addEventListener("click", handleClickOutside, true);
+      return () => {
+        document.removeEventListener("click", handleClickOutside, true);
+      };
     },
     [debouncedSearchText] // Only call effect if debounced search text changes
   );
 
-  const inputProps = {
-    placeholder: "Enter search text...",
-    value,
-    onChange,
-    onFocus,
+  const handleKeyDown = (e) => {
+    // arrow up/down button should select next/previous list element
+    if (e.keyCode === 38 && currentFocus >= 0) {
+      setCurrentFocus(currentFocus - 1);
+    } else if (e.keyCode === 40 && currentFocus < searchResult.length - 1) {
+      setCurrentFocus(currentFocus + 1);
+    } else if (e.keyCode === 13) {
+      const currentOption = suggestionsRef.current.childNodes[currentFocus];
+      setSearchText(`${currentOption.textContent} `);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setSearchText(e.target.value);
+    setShowSuggestions(true);
   };
 
   return (
-    <>
+    <div className="container">
       <section>
         <h3 className="display-3 text-secondary">Search Utility</h3>
       </section>
-      <Autosuggest
-        suggestions={suggestions}
-        onSuggestionsFetchRequested={onSuggestionsFetchRequested}
-        onSuggestionsClearRequested={onSuggestionsClearRequested}
-        getSuggestionValue={getSuggestionValue}
-        renderSuggestion={renderSuggestion}
-        inputProps={inputProps}
-      />
-    </>
+      <section
+        data-testid="SearchSuggestions"
+        className="input-group mt-5"
+        {...props}
+      >
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Enter search text"
+          aria-label="search text"
+          autoFocus
+          value={searchText}
+          onChange={handleChange}
+          onFocus={(e) => setShowSuggestions(true)}
+          onKeyDown={handleKeyDown}
+        />
+      </section>
+      {showSuggestions && (
+        <section>
+          {!searchResult.length && searchText && (
+            <p className="text-info">No data found</p>
+          )}
+          <ul
+            ref={suggestionsRef}
+            className="list-group flush"
+            onBlur={(e) => setShowSuggestions(false)}
+          >
+            <Suggestions
+              currentFocus={currentFocus}
+              suggestions={searchResult}
+              searchText={searchText}
+              setSearchText={setSearchText}
+              setShowSuggestions={setShowSuggestions}
+            />
+          </ul>
+        </section>
+      )}
+    </div>
   );
 };
 
