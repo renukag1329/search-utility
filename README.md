@@ -18,7 +18,7 @@ npm install
 npm start
 ```
 
-## Available Scripts A
+## Available Scripts 
 
 In the project directory, you can run:
 
